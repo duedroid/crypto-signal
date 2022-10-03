@@ -1,4 +1,5 @@
 import logging
+import os
 
 from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -51,6 +52,10 @@ class Scheduler:
 
 @app.on_event("startup")
 async def startup():
+    directory = os.path.join(os.getcwd(), 'data')
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
     app.state.scheduler = Scheduler()
     app.state.scheduler.start()
 
@@ -65,6 +70,6 @@ async def root_api():
     return {'message': 'ok'}
 
 
-# @app.get('/test')
-# async def root_api():
-#     return await binance_future_signal()
+@app.get('/test')
+async def root_api():
+    return await binance_future_signal()
