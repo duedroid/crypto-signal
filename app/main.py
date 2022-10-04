@@ -3,12 +3,16 @@ import os
 
 from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pytz import utc
 
 from core.config import settings
 from core.tasks import binance_future_signal
+from utils.auth import server_auth_scheme
 
 
 logger = logging.getLogger(__name__)
@@ -22,6 +26,9 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+templates = Jinja2Templates(directory="templates")
 
 
 class Scheduler:
@@ -70,6 +77,17 @@ async def root_api():
     return {'message': 'ok'}
 
 
-@app.get('/test')
-async def root_api():
+@app.get('/api/test')
+async def root_api(auth: bool = Depends(server_auth_scheme)):
     return await binance_future_signal()
+
+
+@app.get('/accounts', response_class=HTMLResponse)
+async def read_item(request: Request):
+    return templates.TemplateResponse(
+        'accounts.html',
+        {
+            'request': request,
+            'message': 'test'
+        }
+    )
