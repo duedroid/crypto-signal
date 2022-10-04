@@ -88,6 +88,7 @@ async def read_item(request: Request):
         'accounts.html',
         {
             'request': request,
-            'message': 'test'
+            'message': 'test',
+            'message_list': [1,2,3]
         }
     )
