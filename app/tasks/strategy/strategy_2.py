@@ -1,18 +1,16 @@
-import asyncio
-
 import numpy as np
 import orjson
-import pendulum
+import rollbar
 from talib import EMA, RSI
 
 from core.redis import redis_client
 
 
-async def calculate_strategy_2(symbol: str, date: pendulum.DateTime):
+async def calculate_strategy_2(symbol: str, date_str: str):
     # 3 EMA + RSI - 4H
     try:
-        klines = np.loadtxt(f'data/{symbol}.txt', delimiter=',')
-        prices = np.array([kline[3] for kline in klines]) * (10 ** 5)
+        klines = np.loadtxt(f'data/4h/{symbol}.txt', delimiter=',')
+        prices = np.array([kline[4] for kline in klines]) * (10 ** 5)
 
         fast_ema = EMA(prices, timeperiod=20)
         mid_ema = EMA(prices, timeperiod=50)
@@ -44,12 +42,11 @@ async def calculate_strategy_2(symbol: str, date: pendulum.DateTime):
             key = f'signal:strategy_2:{pair}'
             data = {
                 'side': 'l' if long_condition else 's',
-                'date': date.to_atom_string()
+                'date': date_str
             }
             await redis_client.set(key, orjson.dumps(data))
-    except Exception as e:
-        print('strategy_2', symbol, e)
-
-
-def sync_calculate_strategy_2(symbol: str, date: pendulum.DateTime):
-    asyncio.run(calculate_strategy_2(symbol, date))
+    except:
+        rollbar.report_exc_info(extra_data={
+            'symbol': symbol,
+            'date': date_str
+        })

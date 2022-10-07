@@ -6,8 +6,12 @@ from pydantic import BaseSettings
 class Settings(BaseSettings):
     SERVER_TOKEN: str
     PROJECT_NAME: str = 'shibot'
-    REDIS_AP_HOST: str
-    REDIS_AP_DB: str
+    ENVIRONMENT: str
+    ROLLBAR_ACCESS_TOKEN: str
+    REDIS_ARQ_BROKER: str
+    REDIS_CACHE: str
+    MONGO_URL: str
+    MONGO_DB: str
     BINANCE_FUTURE_URL: str = 'https://fapi.binance.com'
     TELEGRAM_URL: str
     TELEGRAM_CHAT_ID: str

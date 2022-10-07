@@ -1,24 +1,33 @@
 import logging
 import os
+from datetime import datetime, timezone
 
-from apscheduler.jobstores.redis import RedisJobStore
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import rollbar
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pytz import utc
+from rollbar.contrib.fastapi import ReporterMiddleware as RollbarMiddleware
 
+from core.arq import get_arq_pool
 from core.config import settings
-from core.tasks import binance_future_signal
+from core.mongo import db
+from schemas.strategy import CreateStrategySchema
 from utils.auth import server_auth_scheme
 
 
 logger = logging.getLogger(__name__)
 
+rollbar.init(
+    settings.ROLLBAR_ACCESS_TOKEN,
+    environment=settings.ENVIRONMENT,
+    handler='async',
+    include_request_body=True,
+)
 
 app = FastAPI(title=settings.PROJECT_NAME)
+app.add_middleware(RollbarMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],
@@ -31,45 +40,13 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
-class Scheduler:
-    def start(self):
-        logger.info("Starting scheduler service.")
-        self.scheduler = AsyncIOScheduler(
-            jobstores={
-                'default': RedisJobStore(host=settings.REDIS_AP_HOST, db=0)
-            },
-            timezone=utc
-        )
-        self.scheduler.add_job(
-            binance_future_signal,
-            'cron',
-            id='binance_future_signal',
-            hour='*/4',
-            minute=0,
-            replace_existing=True
-        )
-        self.scheduler.start()
-    
-
-    def shutdown(self):
-        logger.info("Shutdown scheduler service")
-        self.scheduler.remove_all_jobs()
-        self.scheduler.shutdown()
-
-
 @app.on_event("startup")
 async def startup():
-    directory = os.path.join(os.getcwd(), 'data')
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-    app.state.scheduler = Scheduler()
-    app.state.scheduler.start()
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    app.state.scheduler.shutdown()
+    timeframe_list = ['5m', '15m', '30m', '1h', '4h', '1d']
+    for timeframe in timeframe_list:
+        directory = os.path.join(os.getcwd(), f'data/{timeframe}')
+        if not os.path.exists(directory):
+            os.makedirs(directory)
 
 
 @app.get('/')
@@ -78,8 +55,23 @@ async def root_api():
 
 
 @app.get('/api/test')
-async def root_api(auth: bool = Depends(server_auth_scheme)):
-    return await binance_future_signal()
+async def test_api(auth: bool = Depends(server_auth_scheme)):
+    arq_redis = await get_arq_pool()
+    await arq_redis.enqueue_job('binance_future_signal_1d')
+    await arq_redis.enqueue_job('binance_future_signal_4h')
+    await arq_redis.close()
+    return {}
+
+
+@app.post('/api/strategy')
+async def create_strategy_api(
+    data: CreateStrategySchema,
+    auth: bool = Depends(server_auth_scheme)
+):
+    data_dict = data.dict()
+    data_dict['created_at'] = datetime.now(tz=timezone.utc)
+    await db['strategy_strategy'].insert_one(data_dict)
+    return {}
 
 
 @app.get('/accounts', response_class=HTMLResponse)

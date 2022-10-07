@@ -7,7 +7,6 @@ authors = ["dewdroid <thossapoldew@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.10"
 httpx = "^0.23.0"
-APScheduler = "^3.9.1"
 redis = "^4.3.4"
 fastapi = "^0.85.0"
 uvicorn = {extras = ["standard"], version = "^0.18.3"}
@@ -15,6 +14,10 @@ pendulum = "^2.1.2"
 numpy = "^1.23.3"
 orjson = "^3.8.0"
 Jinja2 = "^3.1.2"
+aiofiles = "^22.1.0"
+rollbar = "^0.16.3"
+arq = "^0.24.0"
+motor = "^3.0.0"
 
 [tool.poetry.dev-dependencies]
 ipython = "^8.5.0"

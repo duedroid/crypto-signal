@@ -9,6 +9,12 @@ services:
       - 80:8000
     command: uvicorn main:app --host 0.0.0.0 --port 8000
   
+  worker:
+    container_name: worker
+    build: .
+    restart: always
+    command: arq core.worker.WorkerSettings
+  
   redis:
     image: redis:6-alpine
     restart: always
