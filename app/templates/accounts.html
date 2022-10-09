@@ -1,13 +1,65 @@
 <html>
-<head>
-    <title>Item Details</title>
-    <link href="{{ url_for('static', path='/accounts.css') }}" rel="stylesheet">
-</head>
-<body>
-    <h1 id="message_id">Message : {{ message }}</h1>
-    {% for m in message_list %}
-    {{ m }}
-    {% endfor %}
 
+<head>
+  <title>SHI BOT</title>
+  <!-- production -->
+  <link href="{{ url_for('static', path='/custom.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', path='/index.css') }}" rel="stylesheet">
+  <!-- local test -->
+  <!-- <link href="../static//custom.min.css" rel="stylesheet">
+  <link href="../static//index.css" rel="stylesheet"> -->
+  <!-- install bootstrap -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+    crossorigin="anonymous"></script>
+  <style>
+    .form-wrapper {
+      min-width: 400px;
+      max-width: 500px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1 id="message_id">Message : {{ message }}</h1>
+  {% for m in message_list %}
+  {{ m }}
+  {% endfor %}
+  <h1 class="text-center">Parameter</h1>
+  <form class="form-wrapper container mt-4">
+    <div class="row">
+      <label for="budget" class="col-sm-4 form-label">Budget</label>
+      <div class="col-sm-8">
+        <input type="number" id="budget" class="form-control">
+      </div>
+    </div>
+    <div class="row mt-4">
+      <label for="margin_mode" class="col-sm-4 form-label">Margin Mode</label>
+      <div class="col-sm-8">
+        <select id="margin_mode" value="cross" class="form-control">
+          <option value="cross">cross</option>
+          <option value="isolated">isolated</option>
+        </select>
+      </div>
+    </div>
+    <div class="row mt-4">
+      <label for="leverage" class="col-sm-4 form-label">Leverage</label>
+      <div class="col-sm-8">
+        <input type="number" id="leverage" class="form-control">
+      </div>
+    </div>
+    <div class="row mt-4">
+      <label for="strategy" class="col-sm-4 form-label">Strategy</label>
+      <div class="col-sm-8">
+        <input type="text" id="strategy" class="form-control">
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col">
+        <button type="button" class="btn btn-primary text-center text-light w-100">RUN BOT</button>
+      </div>
+    </div>
+  </form>
 </body>
+
 </html>

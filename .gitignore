@@ -10,3 +10,5 @@ media/
 *.sql
 
 app/data/
+
+**/node_modules
